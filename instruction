@@ -1,0 +1,62 @@
+1. We will start with the Apache webserver:
+sudo apt install apache2
+which will install and start the apache on port 80
+test with pointing the browser to http:://localhost
+
+2. Next, let's fix some permissions and ownership:
+go to cd /var/www/ and if you type ls -la, you will see that all the files and directories are owned by and belong to root:root. Let's fix this in order to have access to files inside this directory. First, we will put out current user into the www-data group
+sudo usermod -a -G www-data:$USER
+and then with sudo chown www-data:www-data /var/www -R
+we will recursively set all the files inside /var/www to belong to www-data which our user just became a member of. Now check the result with ls -la.
+
+After the ownership, we will take care of the files and directories permissions. We will set them with:
+chmod +0770 /var/www -R
+With this line, we set read-write-execute to the owner and the group, in order for all the files and directories as well as the newly created files and directories to inherit those permissions.
+
+3. Editor
+Install the VisualStudio Code:
+sudo apt install code
+then inside the /var/www directory type code .
+Create a file index.php with the following content:
+<?php
+phpinfo();
+?>
+with nano index.php
+
+4. PHP
+now it is time to add a way for Apache to interpret PHP code:
+sudo apt install apache-php7.3
+then restart the apache server with sudo systemctl restart apache2
+Point your browser again to http://localhost/index.php and you should be able to see the information from the phpinfo() function;
+
+5. MySql server
+sudo apt install mysql-server
+sudo mysql_secure_installation where please set a root password!
+mysql -uroot -p (enter the password generated in the previous step)
+when ready just type: use mysql; select plugin from user where User = 'root';
+In the resulting table you should see: mysql_native_password; If not please type:
+Alter user 'root'@'localhost'  identified with mysql_native_password by 'mysql'; Here we set MySQL as password and mysql_native_password as an authentication method in order to be able to use and login to MySQL databases inside of our applications;
+followed by: flush privileges; to be able to have the changes accepted;
+
+6. PHP-MySql connection
+Exit the MySQL prompt and type:
+sudo apt install php7.3-mysql
+and again restart the apache server with sudo systemctl restart apache2
+Now paste the following code inside the index.php file and run again index.php in the browser:
+
+<?php
+$servername = "localhost";
+$username = "root";
+$password = "mysql";
+try {
+$conn = new PDO("mysql:host=$servername;dbname=mysql", $username, $password);
+$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+echo "Connected successfully";
+}
+catch(PDOException $e)
+{
+echo "Connection failed: " . $e->getMessage();
+}
+?>
+You should be able to see: Connected successfully!
+Congratulations!
